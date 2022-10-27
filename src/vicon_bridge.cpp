@@ -215,7 +215,7 @@ public:
     diag_updater(),
     min_freq_(0.1), max_freq_(1000),
     freq_status_(diagnostic_updater::FrequencyStatusParam(&min_freq_, &max_freq_)),
-    stream_mode_("ClientPull"),
+    stream_mode_("ServerPush"),
         host_name_(""), tf_ref_frame_id_("world"), tracked_frame_suffix_("vicon"),
         lastFrameNumber(0), frameCount(0), droppedFrameCount(0), frame_datum(0), n_markers(0), n_unlabeled_markers(0),
         marker_data_enabled(false), unlabeled_marker_data_enabled(false), grab_frames_(false)
@@ -248,7 +248,7 @@ public:
     // Publishers
     if(publish_markers_)
     {
-      marker_pub_ = nh.advertise<vicon_bridge::Markers>(tracked_frame_suffix_ + "/markers", 10);
+      marker_pub_ = nh.advertise<vicon_bridge::Markers>(tracked_frame_suffix_ + "/markers", 1);
     }
     startGrabbing();
   }
@@ -338,7 +338,7 @@ private:
     if(publish_tf_)
     {
       spub.pub = nh.advertise<geometry_msgs::TransformStamped>(tracked_frame_suffix_ + "/" + subject_name + "/"
-                                                                                                            + segment_name, 10);
+                                                                                                            + segment_name, 1);
     }
     // try to get zero pose from parameter server
     string param_suffix(subject_name + "/" + segment_name + "/zero_pose/");
@@ -383,8 +383,9 @@ private:
     {
       while (vicon_client_.GetFrame().Result != Result::Success && ros::ok())
       {
-        ROS_INFO("getFrame returned false");
-        d.sleep();
+        ROS_INFO("getFrame returned false"); //nyd
+        ROS_INFO("Sleeping Disabled.");
+        // d.sleep();
       }
       now_time = ros::Time::now();
 
@@ -435,7 +436,8 @@ private:
     else
     {
       freq_status_.tick();
-      ros::Duration vicon_latency(vicon_client_.GetLatencyTotal().Total);
+      // ros::Duration vicon_latency(vicon_client_.GetLatencyTotal().Total);
+      ros::Duration vicon_latency(0);
 
       if(publish_tf_ || broadcast_tf_)
       {
